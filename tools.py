@@ -1,4 +1,8 @@
-# tools.py
+"""
+Enhanced tools for Hugo-based learning guide generation
+Updated for 2025 best practices
+"""
+
 import os
 import json
 import requests
@@ -9,7 +13,7 @@ from bs4 import BeautifulSoup
 from typing import List, Dict, Any, Optional
 from config import config
 import logging
-from prompts import (structure_prompt as structure_prompt_template,)
+from prompts import structure_prompt
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +32,7 @@ class LearningGuideTools:
             raise
 
     def prompt_selector_tool(self, user_query: str) -> str:
-        """Analyze user query and return appropriate prompt template"""
+        """Analyze user query and return appropriate prompt level"""
         query_lower = user_query.lower()
 
         beginner_keywords = [
@@ -38,6 +42,8 @@ class LearningGuideTools:
             "getting started",
             "basic",
             "simple",
+            "learn",
+            "tutorial",
         ]
         advanced_keywords = [
             "advanced",
@@ -45,6 +51,7 @@ class LearningGuideTools:
             "professional",
             "deep dive",
             "complex",
+            "production",
         ]
         complete_keywords = [
             "zero to advance",
@@ -52,6 +59,7 @@ class LearningGuideTools:
             "comprehensive",
             "full",
             "end to end",
+            "beginner to advanced",
         ]
 
         if any(term in query_lower for term in complete_keywords):
@@ -61,60 +69,91 @@ class LearningGuideTools:
         elif any(term in query_lower for term in beginner_keywords):
             return "beginner"
         else:
-            return "complete"  # Default to complete
+            return "complete"  # Default
 
-    def create_folder_tool(self, topic: str) -> str:
-        """Create unique folder with timestamp for the learning guide"""
+    def create_folder_structure_tool(self, topic: str) -> Dict[str, str]:
+        """
+        Create Hugo-compatible folder structure:
+        - content/posts/<index_file>.md  (main index)
+        - content/<subfolder>/<chapter_files>.md  (all chapters)
+        - content/<subfolder>/_index.md  (section index)
+        """
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             safe_topic = "".join(
                 c for c in topic if c.isalnum() or c in (" ", "-", "_")
             ).rstrip()
-            safe_topic = safe_topic.replace(" ", "_")[:50]  # Limit length
-            folder_name = f"{safe_topic}_{timestamp}"
+            safe_topic = safe_topic.replace(" ", "_")[:50]
 
-            folder_path = Path(config.output_dir) / folder_name
-            folder_path.mkdir(parents=True, exist_ok=True)
+            # Create base output directory
+            base_dir = Path(config.output_dir) / f"{safe_topic}_{timestamp}"
+            base_dir.mkdir(parents=True, exist_ok=True)
 
-            logger.info(f"Created folder: {folder_path}")
-            return str(folder_path)
+            # Hugo structure:
+            # content/posts/ - for index file
+            # content/<subfolder>/ - for all chapters
+            posts_dir = base_dir / "content" / "posts"
+            posts_dir.mkdir(parents=True, exist_ok=True)
+
+            # Subfolder will be determined from JSON response
+            # We'll create it later when we know the name
+
+            logger.info(f"Created Hugo folder structure: {base_dir}")
+            
+            return {
+                "base_dir": str(base_dir),
+                "posts_dir": str(posts_dir),
+            }
         except Exception as e:
-            logger.error(f"Error creating folder: {e}")
+            logger.error(f"Error creating folder structure: {e}")
             raise
 
     def create_index_file_tool(
-        self, folder_path: str, topic: str, topics_list: List[Dict]
+        self,
+        posts_dir: str,
+        topic: str,
+        topics_list: List[Dict],
+        index_filename: str,
+        subfolder_name: str,
     ) -> str:
-        """Create index.md file with Hugo front matter and TOC"""
+        """Create main index.md file with Hugo TOML front matter and TOC"""
         try:
-            current_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+00:00")
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            slug = self._create_slug(index_filename)
 
-            front_matter = f"""---
-title: "{topic} - Complete Learning Guide"
-date: {current_date}
-draft: false
-tags: ["{topic.lower()}", "index", "learning-path"]
-categories: ["Learning Guides"]
-toc: false
-type: "guide-index"
-description: "Comprehensive learning guide for {topic} from beginner to advanced"
-weight: 1
----
+            # Create TOML front matter
+            front_matter = f"""+++
+title = "{topic} - Complete Learning Guide"
+date = {current_date}
+draft = false
+description = "Comprehensive learning guide for {topic} from beginner to advanced. Hands-on, practical approach with exercises and projects."
+slug = "{slug}"
+keywords = ["{topic.lower()}", "tutorial", "learning guide", "hands-on", "practical", "beginner", "advanced"]
+tags = ["{topic}", "Tutorial", "Learning Guide", "Programming"]
+categories = ["Learning Guides", "{topic}"]
+author = "AI Learning Guide Generator"
+showReadingTime = true
+showTableOfContents = true
+showComments = false
+toc = false
++++
 
 # {topic} - Complete Learning Guide
 
-Welcome to the comprehensive {topic} learning guide! This guide is structured to take you from beginner concepts to advanced implementations.
+Welcome to the comprehensive **{topic}** learning guide! This guide takes you from beginner concepts to advanced implementations with a **hands-on, learning-by-doing approach**.
 
 ## 📚 Table of Contents
 
 """
 
-            # Add links to each chapter
+            # Add chapter links in Hugo format: /subfolder/chapter-slug/
             for i, topic_item in enumerate(topics_list, 1):
                 chapter_title = topic_item["title"]
-                filename = self._create_filename(chapter_title)
-                front_matter += f"{i}. [{chapter_title}](./{filename})\n"
-
+                chapter_slug = self._create_slug(chapter_title)
+                
+                # Hugo link format: /subfolder/chapter-slug/
+                front_matter += f"{i}. [{chapter_title}](/{subfolder_name}/{chapter_slug}/)\n"
+                
                 # Add subtopics if they exist
                 if "subtopics" in topic_item and topic_item["subtopics"]:
                     for subtopic in topic_item["subtopics"]:
@@ -124,27 +163,30 @@ Welcome to the comprehensive {topic} learning guide! This guide is structured to
             front_matter += f"""
 ## 🎯 How to Use This Guide
 
-1. **Start with the Index** - You're here! This gives you an overview of all topics
-2. **Follow the Sequential Order** - Each chapter builds upon the previous ones
-3. **Practice Along** - Every chapter includes practical examples and exercises
-4. **Take Your Time** - Don't rush; understanding is more important than speed
+1. **Start with the Index** - You're here! Overview of all topics
+2. **Follow Sequential Order** - Each chapter builds upon previous ones
+3. **Practice Along** - Every chapter includes hands-on examples and exercises
+4. **Learn by Doing** - 70-80% practical exercises, 20-30% theory
+5. **Take Your Time** - Understanding > Speed
 
 ## 🔥 What You'll Learn
 
-By completing this guide, you'll have a solid understanding of {topic} from fundamental concepts to advanced implementations, ready to apply your knowledge in real-world projects.
+By completing this guide, you'll have solid understanding of {topic} from fundamentals to advanced implementations, ready to apply in real-world projects.
 
-## 📊 Progress Tracking
+## 📊 Course Stats
 
-- Total Chapters: {len(topics_list)}
-- Estimated Time: {len(topics_list) * 2} hours
-- Difficulty: Progressive (Beginner → Advanced)
+- **Total Chapters**: {len(topics_list)}
+- **Estimated Time**: {len(topics_list) * 2} hours
+- **Difficulty**: Progressive (🟢 Beginner → 🟡 Intermediate → 🔴 Advanced)
+- **Hands-On Focus**: 70-80% practical exercises
 
 ---
 
-*Generated by AI Learning Guide Generator on {datetime.now().strftime("%Y-%m-%d")}*
+**Generated**: {datetime.now().strftime("%Y-%m-%d")} | **Version**: 1.0
 """
 
-            index_path = Path(folder_path) / "index.md"
+            # Write to posts directory
+            index_path = Path(posts_dir) / index_filename
             with open(index_path, "w", encoding="utf-8") as f:
                 f.write(front_matter)
 
@@ -154,31 +196,74 @@ By completing this guide, you'll have a solid understanding of {topic} from fund
             logger.error(f"Error creating index file: {e}")
             raise
 
+    def create_section_index_tool(
+        self, base_dir: str, subfolder_name: str, topic: str
+    ) -> str:
+        """Create _index.md for the chapter section"""
+        try:
+            # Create subfolder in content directory
+            section_dir = Path(base_dir) / "content" / subfolder_name
+            section_dir.mkdir(parents=True, exist_ok=True)
+
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            
+            front_matter = f"""+++
+title = "{topic} Chapters"
+date = {current_date}
+draft = false
+description = "All chapters for the {topic} learning guide"
+toc = false
+showTableOfContents = false
++++
+
+# {topic} Learning Chapters
+
+This section contains all the chapters for the {topic} learning guide. Navigate using the links below or from the main index.
+"""
+
+            section_index_path = section_dir / "_index.md"
+            with open(section_index_path, "w", encoding="utf-8") as f:
+                f.write(front_matter)
+
+            logger.info(f"Created section _index.md: {section_index_path}")
+            return str(section_dir)
+        except Exception as e:
+            logger.error(f"Error creating section index: {e}")
+            raise
+
     def create_chapter_files_tool(
-        self, folder_path: str, chapters: List[Dict]
+        self, section_dir: str, chapters: List[Dict]
     ) -> Dict[str, str]:
-        """Create empty markdown files for each main chapter"""
+        """Create empty markdown files for each chapter with TOML front matter"""
         try:
             chapter_files = {}
 
             for i, chapter in enumerate(chapters, 1):
                 chapter_title = chapter["title"]
-                filename = self._create_filename(chapter_title)
-                file_path = Path(folder_path) / filename
+                chapter_slug = self._create_slug(chapter_title)
+                filename = f"{chapter_slug}.md"
+                file_path = Path(section_dir) / filename
 
-                current_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+00:00")
+                current_date = datetime.now().strftime("%Y-%m-%d")
 
-                front_matter = f"""---
-title: "{chapter_title}"
-date: {current_date}
-draft: false
-tags: ["tutorial", "guide", "learning"]
-categories: ["Learning Guides"]
-toc: true
-author: "AI Learning Guide Generator"
-description: "Learn about {chapter_title}"
-weight: {i + 1}
----
+                # Extract description from subtopics if available
+                description = chapter.get("subtopics", [chapter_title])[0] if chapter.get("subtopics") else chapter_title
+
+                front_matter = f"""+++
+title = "{chapter_title}"
+date = {current_date}
+draft = false
+description = "{description}"
+slug = "{chapter_slug}"
+keywords = ["{chapter_title.lower()}", "tutorial", "hands-on", "practical"]
+tags = ["Tutorial", "Learning", "Hands-On"]
+categories = ["Learning Guides"]
+author = "AI Learning Guide Generator"
+showReadingTime = true
+showTableOfContents = true
+showComments = false
+weight = {i}
++++
 
 # {chapter_title}
 
@@ -199,21 +284,30 @@ weight: {i + 1}
     def save_chapter_content_tool(
         self, file_path: str, content: str, title: str, chapter_index: int = 1
     ) -> str:
-        """Save generated content to chapter file with Hugo front matter"""
+        """Save generated content to chapter file with TOML front matter"""
         try:
-            current_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+00:00")
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            chapter_slug = self._create_slug(title)
 
-            front_matter = f"""---
-title: "{title}"
-date: {current_date}
-draft: false
-tags: ["tutorial", "guide", "learning"]
-categories: ["Learning Guides"]
-toc: true
-author: "AI Learning Guide Generator"
-description: "Comprehensive guide to {title}"
-weight: {chapter_index + 1}
----
+            # Extract first line of content as description
+            content_lines = content.strip().split("\n")
+            description = content_lines[0][:150] if content_lines else title
+
+            front_matter = f"""+++
+title = "{title}"
+date = {current_date}
+draft = false
+description = "{description}"
+slug = "{chapter_slug}"
+keywords = ["{title.lower()}", "tutorial", "hands-on"]
+tags = ["Tutorial", "Learning", "Hands-On"]
+categories = ["Learning Guides"]
+author = "AI Learning Guide Generator"
+showReadingTime = true
+showTableOfContents = true
+showComments = false
+weight = {chapter_index}
++++
 
 """
 
@@ -228,10 +322,40 @@ weight: {chapter_index + 1}
             logger.error(f"Error saving content: {e}")
             raise
 
+    def cleanup_index_progress_tool(self, index_path: str) -> str:
+        """Remove progress section from index file after completion"""
+        try:
+            with open(index_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Remove any progress sections
+            # Look for patterns like "## ✅ Generation Progress" and remove until next ##
+            import re
+            
+            # Pattern to match progress section
+            progress_pattern = r'##\s*✅\s*Generation Progress.*?(?=##|$)'
+            cleaned_content = re.sub(progress_pattern, '', content, flags=re.DOTALL)
+            
+            # Also remove "Latest Update" lines if any
+            update_pattern = r'\*\*Latest Update:\*\*.*?\n'
+            cleaned_content = re.sub(update_pattern, '', cleaned_content)
+            
+            # Remove extra blank lines (more than 2 consecutive)
+            cleaned_content = re.sub(r'\n{3,}', '\n\n', cleaned_content)
+
+            with open(index_path, "w", encoding="utf-8") as f:
+                f.write(cleaned_content)
+
+            logger.info(f"Cleaned up progress section from {index_path}")
+            return f"Successfully cleaned up {index_path}"
+        except Exception as e:
+            logger.error(f"Error cleaning up index: {e}")
+            return f"Error cleaning up index: {str(e)}"
+
     def update_index_tool(
         self, index_path: str, completed_chapter: str, progress: Dict
     ) -> str:
-        """Update index file with completion status"""
+        """Update index file with completion status (temporary progress tracking)"""
         try:
             with open(index_path, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -242,8 +366,9 @@ weight: {chapter_index + 1}
                 (completed_count / total_count * 100) if total_count > 0 else 0
             )
 
-            # Add progress indicator
+            # Add or update progress section
             progress_section = f"""
+
 ## ✅ Generation Progress
 
 **Latest Update:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
@@ -258,11 +383,16 @@ weight: {chapter_index + 1}
 
 """
 
-            # Insert progress before the final line
-            content = content.replace(
-                "*Generated by AI Learning Guide Generator",
-                progress_section + "*Generated by AI Learning Guide Generator",
-            )
+            # Remove old progress section if exists
+            import re
+            progress_pattern = r'##\s*✅\s*Generation Progress.*?(?=##|$)'
+            content = re.sub(progress_pattern, '', content, flags=re.DOTALL)
+
+            # Add new progress before the last line
+            if "**Generated**" in content:
+                content = content.replace("**Generated**", progress_section + "**Generated**")
+            else:
+                content += progress_section
 
             with open(index_path, "w", encoding="utf-8") as f:
                 f.write(content)
@@ -294,7 +424,7 @@ weight: {chapter_index + 1}
                 f"{config.searxng_url}/search",
                 params=params,
                 timeout=10,
-                headers={"User-Agent": "Learning-Guide-Generator/1.0"},
+                headers={"User-Agent": "Learning-Guide-Generator/2.0"},
             )
             response.raise_for_status()
 
@@ -321,7 +451,7 @@ weight: {chapter_index + 1}
             return []
 
     def generate_content_with_ollama(self, prompt: str, model: str = None) -> str:
-        """Generate content using Ollama Mistral model with retries"""
+        """Generate content using Ollama with retries"""
         if model is None:
             model = config.mistral_model
 
@@ -337,7 +467,7 @@ weight: {chapter_index + 1}
                     messages=[{"role": "user", "content": prompt}],
                     options={
                         "temperature": 0.7,
-                        "num_ctx": 20000, #8192,  # Increased context window
+                        "num_ctx": 32000,  # Increased for longer content
                         "repeat_penalty": 1.1,
                         "top_k": 40,
                         "top_p": 0.9,
@@ -345,10 +475,17 @@ weight: {chapter_index + 1}
                 )
 
                 content = response["message"]["content"]
+                
+                # Clean up any markdown wrapper if mistakenly added
+                if content.strip().startswith("```markdown"):
+                    content = content.replace("```markdown", "", 1)
+                if content.strip().endswith("```"):
+                    content = content.rsplit("```", 1)[0]
+                
                 logger.info(
                     f"Successfully generated {len(content)} characters of content"
                 )
-                return content
+                return content.strip()
 
             except Exception as e:
                 logger.warning(f"Attempt {attempt + 1} failed: {e}")
@@ -358,19 +495,10 @@ weight: {chapter_index + 1}
 
         return "Error: Failed to generate content after multiple attempts"
 
-    def _create_filename(self, title: str) -> str:
-        """Create safe filename from title"""
-        safe_name = "".join(
-            c for c in title if c.isalnum() or c in (" ", "-", "_")
-        ).rstrip()
-        safe_name = safe_name.replace(" ", "_").lower()[:50]  # Limit length
-        return f"{safe_name}.md"
-
     def parse_query_extract_topic(self, user_query: str) -> str:
-        """Extract topic from user query using better parsing"""
+        """Extract topic from user query"""
         query_lower = user_query.lower()
 
-        # Remove common phrases
         common_phrases = [
             "generate a learning guide for me topic:",
             "generate a learning guide for",
@@ -391,159 +519,52 @@ weight: {chapter_index + 1}
                 topic = user_query[query_lower.find(phrase) + len(phrase) :].strip()
                 break
 
-        # Clean up and capitalize properly
+        # Clean and capitalize
         topic = " ".join(word.capitalize() for word in topic.split() if word.isalnum())
 
         return topic if topic else "General Programming"
 
-    def generate_topics_structure(self, topic: str, level: str) -> List[Dict[str, Any]]:
-        """Generate topic structure based on topic and level with better prompting"""
-        #         structure_prompt = f"""
-        # You are an expert curriculum designer. Create a comprehensive learning structure for "{topic}" at {level} level.
-
-        # Generate a JSON array of 6-8 chapters, each with:
-        # - title: Clear, specific chapter name
-        # - subtopics: 3-5 specific subtopics that will be covered
-
-        # Rules:
-        # 1. Progress from basic to advanced concepts
-        # 2. Each chapter should build upon previous ones
-        # 3. Include practical examples and real-world applications
-        # 4. Make subtopics specific and actionable
-
-        # Topic: {topic}
-        # Level: {level}
-
-        # Return ONLY valid JSON in this exact format:
-        # [
-        #   {{
-        #     "title": "Introduction to {topic}",
-        #     "subtopics": ["What is {topic}", "Key Benefits", "Use Cases", "Getting Started"]
-        #   }},
-        #   {{
-        #     "title": "Core Concepts",
-        #     "subtopics": ["Fundamental Principles", "Architecture Overview", "Key Components", "Basic Workflow"]
-        #   }}
-        # ]
-
-        # Generate 6-8 chapters total. Respond with ONLY the JSON array, no explanations.
-        # """
-
-        # structure_prompt = f"""
-        structure_prompt = f"""
-You are an expert curriculum designer and learning pathway architect, utilizing the latest instructional design methodologies for 2025.
-
-Generate a comprehensive learning structure for "{topic}" at {level} level based on modern curriculum development best practices including:
-- Learner-centered design principles
-- Progressive complexity scaling
-- Multi-modal content delivery
-- Active learning integration
-- Microlearning and content chunking
-- Scenario-based learning opportunities
-
-Create a JSON array of 6-8 strategically designed chapters with progressive difficulty, where each chapter includes:
-- title: Clear, actionable chapter name that indicates learning outcomes
-- subtopics: 4-6 specific, measurable subtopics with progressive complexity
-- learning_outcomes: Key skills/knowledge students will gain
-- complexity_indicators: Difficulty markers for adaptive learning paths
-
-**Level-Specific Adaptations:**
-
-**If level = "beginner":**
-- Focus on foundational concepts and hands-on practice
-- Include setup, basic concepts, practical exercises, and guided projects
-- Emphasize clear explanations and step-by-step guidance
-- Incorporate frequent checkpoints and reinforcement
-
-**If level = "advanced":**  
-- Emphasize complex problem-solving, optimization, and expert-level patterns
-- Include architecture considerations, performance analysis, and case studies
-- Focus on industry best practices and cutting-edge applications
-- Incorporate research directions and specialization areas
-
-**If level = "combined":**
-- Structure with progressive learning tracks (🟢 Beginner → 🟡 Intermediate → 🔴 Advanced)
-- Include multi-level examples and adaptive pathways
-- Provide clear skill level indicators and flexible navigation
-- Balance foundational knowledge with advanced applications
-
-**Universal Requirements:**
-1. Each chapter must build logically upon previous concepts
-2. Include practical applications and real-world relevance
-3. Incorporate active learning elements (exercises, projects, assessments)
-4. Ensure clear learning progression with measurable outcomes
-5. Follow modern microlearning principles with digestible content chunks
-
-Topic: {topic}
-Level: {level}
-
-Return ONLY valid JSON in this exact format:
-[
-  {{
-    "title": "Getting Started with {topic}: Foundation and Setup",
-    "subtopics": [
-      "What is {topic} and Why It Matters", 
-      "Core Concepts and Terminology", 
-      "Development Environment Setup", 
-      "First Practical Implementation",
-      "Common Pitfalls and Best Practices"
-    ],
-    "learning_outcomes": [
-      "Understand fundamental {topic} concepts",
-      "Set up complete development environment", 
-      "Create first working implementation"
-    ],
-    "complexity_indicators": "{level}_friendly"
-  }},
-  {{
-    "title": "Core Principles and Implementation Patterns",
-    "subtopics": [
-      "Fundamental Architecture and Design",
-      "Essential Implementation Techniques", 
-      "Code Organization and Structure",
-      "Testing and Validation Methods",
-      "Performance Considerations"
-    ],
-    "learning_outcomes": [
-      "Master core {topic} implementation patterns",
-      "Apply best practices for code organization",
-      "Implement comprehensive testing strategies"
-    ],
-    "complexity_indicators": "building_complexity"
-  }}
-]
-
-Generate 6-8 chapters total following this enhanced structure. Respond with ONLY the JSON array, no explanations or additional text.
-"""
-        structure_prompt = structure_prompt_template.format(topic=topic, level=level)
+    def generate_topics_structure(self, topic: str, level: str) -> Dict[str, Any]:
+        """Generate topic structure with file naming suggestions"""
+        structure_prompt_filled = structure_prompt.format(topic=topic, level=level)
 
         try:
             logger.info(f"Generating topic structure for {topic} at {level} level")
-            response = self.generate_content_with_ollama(structure_prompt)
+            response = self.generate_content_with_ollama(structure_prompt_filled)
 
-            # Try to extract JSON from response
+            # Extract JSON
             json_start = response.find("[")
             json_end = response.rfind("]") + 1
 
             if json_start != -1 and json_end > json_start:
                 json_str = response[json_start:json_end]
                 structure = json.loads(json_str)
+                
+                # Extract file naming suggestions from first chapter
+                suggested_index = structure[0].get("suggested_index_name", f"learn-{topic.lower().replace(' ', '-')}-guide.md")
+                suggested_subfolder = structure[0].get("suggested_subfolder", f"{topic.lower().replace(' ', '-')}-chapters")
+                
                 logger.info(
                     f"Successfully generated structure with {len(structure)} chapters"
                 )
-                return structure
+                
+                return {
+                    "chapters": structure,
+                    "suggested_index_name": suggested_index,
+                    "suggested_subfolder": suggested_subfolder,
+                }
             else:
-                logger.warning("Could not parse JSON from response, using fallback")
+                logger.warning("Could not parse JSON, using fallback")
+                return self._get_fallback_structure(topic, level)
 
         except json.JSONDecodeError as e:
-            logger.warning(f"JSON parsing error: {e}, using fallback structure")
+            logger.warning(f"JSON parsing error: {e}, using fallback")
+            return self._get_fallback_structure(topic, level)
         except Exception as e:
             logger.error(f"Error generating structure: {e}")
+            return self._get_fallback_structure(topic, level)
 
-        # Fallback structure
-        return self._get_fallback_structure(topic, level)
-
-    def _get_fallback_structure(self, topic: str, level: str) -> List[Dict[str, Any]]:
+    def _get_fallback_structure(self, topic: str, level: str) -> Dict[str, Any]:
         """Enhanced fallback topic structure"""
         base_structure = [
             {
@@ -626,4 +647,16 @@ Generate 6-8 chapters total following this enhanced structure. Respond with ONLY
                 ]
             )
 
-        return base_structure
+        return {
+            "chapters": base_structure,
+            "suggested_index_name": f"learn-{topic.lower().replace(' ', '-')}-guide.md",
+            "suggested_subfolder": f"{topic.lower().replace(' ', '-')}-chapters",
+        }
+
+    def _create_slug(self, text: str) -> str:
+        """Create URL-safe slug from text"""
+        slug = text.lower()
+        slug = slug.replace(" ", "-")
+        slug = "".join(c for c in slug if c.isalnum() or c == "-")
+        slug = slug.strip("-")
+        return slug[:100]  # Limit length

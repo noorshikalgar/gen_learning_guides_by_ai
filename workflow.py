@@ -1,4 +1,8 @@
-# workflow.py
+"""
+Enhanced workflow for Hugo-based learning guide generation
+Updated for 2025 with proper cleanup and Hugo structure
+"""
+
 from typing import Literal
 from langgraph.graph import StateGraph, END, START
 from prompts import BEGINNER_PROMPT, ADVANCED_PROMPT, COMBINED_PROMPT
@@ -66,29 +70,43 @@ def select_prompt_node(state: LearningGuideState) -> LearningGuideState:
 
 
 def generate_index_node(state: LearningGuideState) -> LearningGuideState:
-    """Generate topics structure and create folder"""
+    """Generate topics structure and create Hugo folder structure"""
     try:
         topic = state["topic"]
         level = state["level"]
 
         logger.info(f"Generating index for {topic}")
 
-        # Create folder
-        folder_path = tools.create_folder_tool(topic)
+        # Create Hugo folder structure
+        folder_structure = tools.create_folder_structure_tool(topic)
+        base_dir = folder_structure["base_dir"]
+        posts_dir = folder_structure["posts_dir"]
 
-        # Generate topics structure
-        topics_structure = tools.generate_topics_structure(topic, level)
+        # Generate topics structure (returns dict with chapters and file suggestions)
+        topics_data = tools.generate_topics_structure(topic, level)
+        topics_structure = topics_data["chapters"]
+        suggested_index_name = topics_data.get("suggested_index_name", f"learn-{topic.lower().replace(' ', '-')}-guide.md")
+        suggested_subfolder = topics_data.get("suggested_subfolder", f"{topic.lower().replace(' ', '-')}-chapters")
 
-        # Create index file
+        # Create section directory and _index.md
+        section_dir = tools.create_section_index_tool(
+            base_dir, suggested_subfolder, topic
+        )
+
+        # Create index file in posts directory
         index_file_path = tools.create_index_file_tool(
-            folder_path, topic, topics_structure
+            posts_dir, topic, topics_structure, suggested_index_name, suggested_subfolder
         )
 
         return {
             **state,
-            "folder_path": folder_path,
+            "base_dir": base_dir,
+            "posts_dir": posts_dir,
+            "section_dir": section_dir,
+            "folder_path": base_dir,  # For backward compatibility
             "topics_structure": topics_structure,
             "index_file_path": index_file_path,
+            "suggested_subfolder": suggested_subfolder,
             "progress": {
                 "completed_chapters": [],
                 "total_chapters": len(topics_structure),
@@ -107,13 +125,13 @@ def generate_index_node(state: LearningGuideState) -> LearningGuideState:
 
 
 def create_structure_node(state: LearningGuideState) -> LearningGuideState:
-    """Create chapter files"""
+    """Create chapter files in section directory"""
     try:
-        folder_path = state["folder_path"]
+        section_dir = state["section_dir"]
         topics_structure = state["topics_structure"]
 
         logger.info("Creating chapter file structure")
-        chapter_files = tools.create_chapter_files_tool(folder_path, topics_structure)
+        chapter_files = tools.create_chapter_files_tool(section_dir, topics_structure)
 
         return {
             **state,
@@ -169,17 +187,11 @@ def generate_content_node(state: LearningGuideState) -> LearningGuideState:
                 [f"- {subtopic}" for subtopic in current_chapter["subtopics"]]
             )
 
-        selected_prompt = state["selected_prompt"]
-        prompt = selected_prompt.format(
-            topic=state["topic"],
-            chapter=chapter_title + subtopics_text,
-            search_context=search_context,
-        )
-
         return {
             **state,
             "current_chapter": chapter_title,
             "search_results": search_results,
+            "search_context": search_context,
             "generation_status": f"generating_content_{current_index + 1}",
         }
     except Exception as e:
@@ -205,14 +217,8 @@ def save_content_node(state: LearningGuideState) -> LearningGuideState:
 
         logger.info(f"Saving content for: {current_chapter}")
 
-        # Generate search context
-        search_context = ""
-        search_results = state.get("search_results", [])
-        if search_results:
-            search_context = "Recent information from web search:\n"
-            for result in search_results:
-                search_context += f"- {result['title']}: {result['snippet'][:200]}...\n"
-            search_context += "\n"
+        # Get search context
+        search_context = state.get("search_context", "")
 
         # Get chapter details
         topics_structure = state["topics_structure"]
@@ -261,7 +267,7 @@ def update_progress_node(state: LearningGuideState) -> LearningGuideState:
         current_chapter = state.get("current_chapter")
         current_index = state.get("current_chapter_index", 0)
 
-        # Update index file
+        # Update index file with progress
         if current_chapter:
             progress = state.get("progress", {})
             progress["completed_chapters"] = state.get("completed_chapters", [])
@@ -287,8 +293,32 @@ def update_progress_node(state: LearningGuideState) -> LearningGuideState:
         }
 
 
-def should_continue(state: LearningGuideState) -> Literal["continue", "end"]:
-    """Determine if we should continue generating chapters"""
+def cleanup_index_node(state: LearningGuideState) -> LearningGuideState:
+    """Clean up progress section from index file after completion"""
+    try:
+        index_file_path = state.get("index_file_path")
+        
+        if index_file_path:
+            logger.info("Cleaning up progress section from index file")
+            result = tools.cleanup_index_progress_tool(index_file_path)
+            logger.info(result)
+
+        return {
+            **state,
+            "generation_status": "cleanup_completed",
+        }
+    except Exception as e:
+        logger.error(f"Cleanup error: {e}")
+        return {
+            **state,
+            "error_messages": state.get("error_messages", [])
+            + [f"Cleanup error: {str(e)}"],
+            "generation_status": "error",
+        }
+
+
+def should_continue(state: LearningGuideState) -> Literal["continue", "cleanup", "end"]:
+    """Determine if we should continue generating chapters or move to cleanup"""
     try:
         # Check for errors
         if state.get("generation_status") == "error":
@@ -302,15 +332,15 @@ def should_continue(state: LearningGuideState) -> Literal["continue", "end"]:
             logger.info(f"Continuing with chapter {current_index + 1}/{total_chapters}")
             return "continue"
         else:
-            logger.info("All chapters completed!")
-            return "end"
+            logger.info("All chapters completed! Moving to cleanup...")
+            return "cleanup"
     except Exception as e:
         logger.error(f"Error in should_continue: {e}")
         return "end"
 
 
 def create_learning_guide_workflow():
-    """Create the main workflow with enhanced error handling"""
+    """Create the main workflow with cleanup step"""
     workflow = StateGraph(LearningGuideState)
 
     # Add nodes
@@ -321,6 +351,7 @@ def create_learning_guide_workflow():
     workflow.add_node("generate_content", generate_content_node)
     workflow.add_node("save_content", save_content_node)
     workflow.add_node("update_progress", update_progress_node)
+    workflow.add_node("cleanup_index", cleanup_index_node)
 
     # Define edges
     workflow.add_edge(START, "parse_query")
@@ -331,9 +362,18 @@ def create_learning_guide_workflow():
     workflow.add_edge("generate_content", "save_content")
     workflow.add_edge("save_content", "update_progress")
 
-    # Conditional edge for looping
+    # Conditional edge for looping or cleanup
     workflow.add_conditional_edges(
-        "update_progress", should_continue, {"continue": "generate_content", "end": END}
+        "update_progress",
+        should_continue,
+        {
+            "continue": "generate_content",
+            "cleanup": "cleanup_index",
+            "end": END,
+        },
     )
+
+    # After cleanup, end the workflow
+    workflow.add_edge("cleanup_index", END)
 
     return workflow.compile()

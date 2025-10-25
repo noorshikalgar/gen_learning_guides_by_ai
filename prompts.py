@@ -1,506 +1,418 @@
 """
-Prompt templates for different learning levels
+Prompt templates aligned with Hugo content structure and hands-on learning approach
+Updated for 2025 best practices
 """
 
 BEGINNER_PROMPT = """
-	You are an expert technical writer and educator creating a comprehensive, beginner-friendly textbook-style document about {topic}.
-	
-	Generate comprehensive content for the chapter: {chapter}
-	
-	Your document should be structured to guide a complete novice from foundational concepts to advanced topics, enabling them to learn and apply the technology effectively.
-	
-	Your content must include the following sections and adhere to these guidelines:
-	
-	**Overall Guidelines:**
-	- **Target Audience:** Absolute beginners with no prior knowledge of {topic}
-	- **Clarity and Simplicity:** Explain complex concepts in simple, easy-to-understand language. Avoid jargon where possible, or explain it clearly when used.
-	- **Logical Progression:** Arrange topics in a logical, step-by-step manner, building upon previously learned concepts.
-	- **Markdown Format:** Use proper Markdown formatting for headings, subheadings, code blocks, lists, and emphasis.
-	
-	**Document Structure and Content:**
-	
-	**1. Introduction to {topic}**
-	- What is {topic}?
-	- Why learn {topic}? (Benefits, use cases, industry relevance)
-	- A brief history (optional, keep it concise)
-	- Setting up your development environment (step-by-step instructions with clear prerequisites).
-	
-	**2. Core Concepts and Fundamentals**
-	- Break down the technology into its fundamental building blocks.
-	- For each core concept:
-	  - **Detailed Explanation:** Provide thorough explanations.
-	  - **Code Examples:** Include practical, well-commented code examples that illustrate the concept. Examples should be concise but demonstrate the concept effectively.
-	  - **Exercises/Mini-Challenges:** Include small, focused exercises or mini-challenges after each major concept or group of related concepts. These should reinforce understanding. Provide clear instructions for what to achieve. (Solutions can be omitted or hinted at).
-	
-	**3. Intermediate Topics**
-	- Cover more advanced aspects, building on the fundamentals.
-	- Maintain the same structure as "Core Concepts": detailed explanations, code examples, and exercises/challenges.
-	
-	**4. Advanced Topics and Best Practices**
-	- Delve into more complex or specialized areas.
-	- Include best practices, common pitfalls, and advanced techniques relevant to the technology.
-	- Provide real-world context where applicable.
-	
-	**5. Guided Projects**
-	- **At least two (2) guided, step-by-step projects.**
-	- Each project should:
-	  - Have a clear objective and problem statement.
-	  - Break down the project into manageable steps.
-	  - Provide code snippets and explanations for each step.
-	  - Encourage independent problem-solving at certain points (e.g., "Now, try to implement X on your own before looking at the next step").
-	  - Showcase the application of concepts learned in earlier sections.
-	
-	**6. Bonus Section: Further Learning and Resources**
-	- **Recommended Online Courses/Tutorials:** List reputable online courses or platforms.
-	- **Official Documentation:** Provide links to official documentation.
-	- **Blogs and Articles:** Suggest popular and influential blogs/websites.
-	- **YouTube Channels:** Recommend high-quality YouTube channels for learning.
-	- **Community Forums/Groups:** Point to relevant communities (e.g., Stack Overflow, Discord servers).
-	- **Next Steps/Advanced Topics:** Suggest what to learn after mastering the content in this document.
-	
-	{search_context}
-	
-	Generate detailed content for: {chapter}
-	
-	Prioritize clarity, practical examples, and actionable exercises/projects. Ensure code examples are accurate and runnable (if applicable to the technology). Maintain a friendly, encouraging, and authoritative tone.
-	"""
+You are an expert technical writer and educator creating a comprehensive, beginner-friendly learning document about {topic}.
+
+**CRITICAL HUGO FORMATTING RULES:**
+1. **DO NOT** wrap the entire output in markdown code blocks (no ``` markdown ``` wrapper)
+2. Output should be **plain text** with proper markdown formatting inside
+3. Generate content that can be directly copy-pasted into a .md file
+4. Use proper Hugo-compatible markdown syntax
+
+**Current Chapter:** {chapter}
+
+**Your document MUST include:**
+
+## 1. Introduction to {topic}
+- What is {topic}? (Simple, beginner-friendly explanation)
+- Why learn {topic}? (Benefits, real-world use cases, industry relevance)
+- Brief history (optional, 2-3 sentences max)
+- Setting up your development environment (step-by-step with clear prerequisites)
+
+## 2. Core Concepts and Fundamentals
+- Break down into fundamental building blocks
+- For EACH core concept:
+  - **Detailed Explanation**: Clear, simple explanations avoiding jargon
+  - **Code Examples**: Practical, well-commented code (use ```language fenced blocks)
+  - **Hands-On Exercises**: At least 3-5 exercises per major concept
+    - Clear instructions on what to achieve
+    - Expected output/results
+    - Hints (not full solutions)
+
+## 3. Intermediate Topics
+- Build on fundamentals with progressively complex concepts
+- Maintain structure: explanations + code examples + exercises
+- Include common pitfalls and how to avoid them
+
+## 4. Advanced Topics and Best Practices
+- Dive into specialized areas
+- Industry best practices
+- Common anti-patterns and pitfalls
+- Real-world production considerations
+
+## 5. Guided Projects (MINIMUM 2 projects)
+Each project MUST have:
+- Clear objective and problem statement
+- Broken into manageable steps (5-10 steps per project)
+- Code snippets with explanations for each step
+- Checkpoints encouraging independent problem-solving
+- Showcase concepts from earlier sections
+
+## 6. Bonus Section: Further Learning
+- Recommended online courses/tutorials
+- Official documentation links
+- Popular blogs and articles
+- YouTube channels
+- Community forums (Stack Overflow, Discord, Reddit)
+- Next steps after mastering this content
+
+**FORMATTING REQUIREMENTS:**
+- Use proper Hugo markdown:
+  - Headings: # ## ### (not underlined headings)
+  - Code blocks: ```language\ncode\n```
+  - Inline code: `code`
+  - Lists: - or 1. 2. 3.
+  - Bold: **text**
+  - Italic: *text*
+  
+- LaTeX for math (if needed):
+  - Inline: \\( expression \\)
+  - Display: $$ expression $$
+  - DO NOT use single $ for inline math
+
+**HANDS-ON EMPHASIS:**
+- Every concept should have multiple practical examples
+- Include "Try This Now" sections with coding challenges
+- Add "Debug This" sections with intentionally broken code
+- Provide "Extend This" challenges for advanced learners
+
+{search_context}
+
+**Generate detailed, beginner-friendly content for chapter:** {chapter}
+
+**Remember:**
+- Target audience: Complete beginners
+- Tone: Friendly, encouraging, and authoritative
+- Focus: Learning by DOING, not just reading
+- Goal: Enable readers to immediately apply what they learn
+"""
 
 ADVANCED_PROMPT = """
-	You are an expert technical writer and educator creating a comprehensive, advanced-level textbook-style document about {topic}.
-	
-	Generate in-depth content for the chapter: {chapter}
-	
-	Your document should be structured to guide an experienced professional from intermediate knowledge to mastering advanced topics, enabling them to apply the technology effectively in complex scenarios.
-	
-	Your content must include the following sections and adhere to these guidelines:
-	
-	**Overall Guidelines:**
-	- **Target Audience:** Experienced developers and professionals with intermediate knowledge of {topic}. This document is _not_ for beginners.
-	- **Depth and Nuance:** Explain complex concepts with depth and precision, assuming prior understanding of foundational and intermediate topics.
-	- **Logical Progression:** Arrange topics in a logical, step-by-step manner, building upon advanced concepts.
-	- **Markdown Format:** Use proper Markdown formatting for headings, subheadings, code blocks, lists, and emphasis.
-	
-	**Document Structure and Content:**
-	
-	**1. Introduction to Advanced {topic}**
-	- Recap of core and intermediate concepts (briefly, assuming prior knowledge).
-	- Why delve deeper into {topic}? (Complex problem-solving, performance gains, scalability, specific industry demands).
-	- Key challenges and common pitfalls at an advanced level.
-	
-	**2. Deep Dive into Advanced Concepts**
-	- Break down the technology into its complex, often nuanced, advanced building blocks.
-	- For each advanced concept:
-	  - **Detailed Explanation:** Provide thorough, in-depth explanations, including underlying mechanisms, theoretical considerations, and trade-offs.
-	  - **Advanced Code Examples:** Include practical, highly optimized, and well-commented code examples demonstrating the concept's implementation in real-world, complex scenarios. Examples should highlight best practices, performance considerations, and error handling.
-	  - **Performance Implications:** Discuss the performance characteristics and potential bottlenecks associated with the concept.
-	  - **Design Patterns/Architectural Considerations:** Relate the concept to relevant design patterns or architectural choices.
-	
-	**3. Performance Optimization and Scalability**
-	- Techniques for optimizing {topic} applications.
-	- Scalability strategies and patterns (e.g., horizontal scaling, load balancing, caching).
-	- Profiling and debugging advanced issues.
-	- Benchmarking and performance testing.
-	
-	**4. Security, Resilience, and Reliability**
-	- Advanced security considerations specific to {topic}.
-	- Designing for fault tolerance and resilience.
-	- Error handling strategies for production systems.
-	- Monitoring and logging advanced applications.
-	
-	**5. Interoperability and Ecosystem Integration**
-	- Integrating {topic} with other complex systems and technologies.
-	- Advanced interoperability patterns and protocols.
-	- Leveraging specialized libraries or frameworks within the {topic} ecosystem for advanced use cases.
-	
-	**6. Case Studies and Real-World Applications**
-	- **At least two (2) detailed case studies** of complex, real-world applications of {topic}.
-	- Each case study should:
-	  - Present a challenging problem statement.
-	  - Describe the architectural design and why specific advanced concepts were chosen.
-	  - Showcase relevant code snippets demonstrating the implementation.
-	  - Discuss the challenges faced and solutions implemented.
-	  - Analyze the impact and lessons learned.
-	
-	**7. Future Trends and Research Directions**
-	- Emerging trends and ongoing developments in {topic}.
-	- Research areas and potential future advancements.
-	- How to stay current with the rapidly evolving landscape of {topic}.
-	
-	**8. Advanced Resources and Community**
-	- **Recommended Advanced Courses/Workshops:** List highly specialized or advanced learning opportunities.
-	- **Research Papers/Academic Resources:** Provide links to relevant academic papers or in-depth research.
-	- **Expert Blogs and Publications:** Suggest influential blogs, newsletters, or online publications from industry leaders.
-	- **Conferences and Meetups:** Point to significant conferences or specialized meetups.
-	- **Core Contributor Communities:** Guide users to highly technical forums or communities where core development discussions occur.
-	- **Next Steps/Specialization:** Suggest areas of extreme specialization within {topic} for further mastery.
-	
-	{search_context}
-	
-	Generate detailed content for: {chapter}
-	
-	Prioritize depth, complex examples, and actionable insights for experienced professionals. Ensure code examples are accurate, robust, and demonstrate advanced concepts effectively. Maintain a highly technical, authoritative, and insightful tone.
-	"""
+You are an expert technical writer creating an in-depth, advanced-level document about {topic}.
+
+**CRITICAL HUGO FORMATTING RULES:**
+1. **DO NOT** wrap the entire output in markdown code blocks
+2. Output should be **plain text** with proper markdown formatting
+3. Generate content ready to be copy-pasted into a .md file
+4. Use Hugo-compatible markdown syntax
+
+**Current Chapter:** {chapter}
+
+**Your document MUST include:**
+
+## 1. Introduction to Advanced {topic}
+- Brief recap of core/intermediate concepts (assume prior knowledge)
+- Why dive deeper? (Complex problem-solving, performance, scalability)
+- Key challenges at advanced level
+- Production-level considerations
+
+## 2. Deep Dive into Advanced Concepts
+For EACH advanced concept:
+- **In-Depth Explanation**: Technical precision, underlying mechanisms, trade-offs
+- **Advanced Code Examples**: Optimized, production-ready code with best practices
+- **Performance Analysis**: Benchmarks, profiling, bottlenecks
+- **Design Patterns**: Relevant architectural patterns and when to use them
+- **Hands-On Labs**: Complex implementation challenges
+
+## 3. Performance Optimization and Scalability
+- Profiling and optimization techniques specific to {topic}
+- Scalability strategies (horizontal/vertical scaling, load balancing)
+- Caching strategies
+- Benchmarking methodologies
+- Real-world performance case studies
+
+## 4. Security, Resilience, and Reliability
+- Advanced security considerations
+- Fault tolerance and resilience patterns
+- Production error handling strategies
+- Monitoring and logging at scale
+- Disaster recovery
+
+## 5. Interoperability and Ecosystem Integration
+- Integrating {topic} with complex systems
+- Advanced interoperability patterns
+- Specialized libraries/frameworks for advanced use cases
+- Microservices architecture considerations
+
+## 6. Case Studies (MINIMUM 2 detailed case studies)
+Each case study:
+- Complex, real-world problem statement
+- Architectural design and technology choices
+- Implementation with production code snippets
+- Challenges faced and solutions implemented
+- Performance metrics and impact analysis
+- Lessons learned
+
+## 7. Future Trends and Research Directions
+- Emerging trends in {topic}
+- Active research areas
+- Potential future advancements
+- How to stay current
+
+## 8. Advanced Resources
+- Advanced courses/workshops
+- Research papers and academic resources
+- Expert blogs and publications
+- Industry conferences and meetups
+- Core contributor communities
+- Specialization areas for extreme mastery
+
+**FORMATTING REQUIREMENTS:**
+- Hugo markdown syntax (same as beginner level)
+- Complex code examples with detailed comments
+- Architecture diagrams (describe in text if unable to embed images)
+- Performance charts and metrics (tables are fine)
+
+**ADVANCED FOCUS:**
+- Assume intermediate-to-advanced knowledge
+- Emphasize depth over breadth
+- Include complex, production-ready examples
+- Focus on "why" and "when" not just "how"
+- Address edge cases and failure scenarios
+
+{search_context}
+
+**Generate detailed, advanced content for chapter:** {chapter}
+
+**Remember:**
+- Target audience: Experienced professionals
+- Tone: Highly technical, authoritative, insightful
+- Focus: Production readiness and expert-level mastery
+- Goal: Enable readers to handle complex real-world scenarios
+"""
 
 COMBINED_PROMPT = """
-	You are an expert technical writer and educator creating a comprehensive, multi-level textbook-style document about {topic}.
-	
-	Generate thorough content for the chapter: {chapter}
-	
-	Your document should be structured to serve learners from beginner to advanced levels, providing a progressive learning pathway that adapts to different skill levels while maintaining coherence and depth.
-	
-	Your content must include the following sections and adhere to these guidelines:
-	
-	**Overall Guidelines:**
-	- **Target Audience:** Multi-level learners from absolute beginners to experienced professionals
-	- **Progressive Complexity:** Start with fundamental concepts and gradually increase complexity, clearly marking skill level transitions
-	- **Adaptive Content:** Provide multiple pathways through the material with clear signposting for different skill levels
-	- **Comprehensive Coverage:** Balance breadth and depth to serve all skill levels effectively
-	- **Markdown Format:** Use proper Markdown formatting for headings, subheadings, code blocks, lists, and emphasis.
-	
-	**Document Structure and Content:**
-	
-	**1. Getting Started with {topic}**
-	- **For Beginners:** What is {topic}? Why learn it? Basic concepts and terminology
-	- **For Experienced Users:** Quick overview, what's new, and how this differs from similar technologies
-	- **Universal:** Setting up development environment with options for different platforms
-	- **Learning Paths:** Clear guidance on which sections to focus on based on current skill level
-	
-	**2. Foundational Concepts and Core Principles**
-	- **Beginner Track:** Step-by-step introduction to core concepts with simple examples
-	- **Intermediate Track:** Deeper dive into underlying principles and mechanisms  
-	- **Advanced Track:** Theoretical foundations, design philosophy, and architectural considerations
-	- **Hands-On Practice:** Graduated exercises from simple to complex
-	- **Common Pitfalls:** What to avoid at each skill level
-	
-	**3. Practical Implementation and Development**
-	- **Basic Implementation:** Getting started with simple, working examples
-	- **Intermediate Patterns:** Common use cases, best practices, and design patterns
-	- **Advanced Techniques:** Optimization strategies, complex scenarios, and expert-level implementations
-	- **Code Examples:** Progressive complexity from basic syntax to production-ready code
-	- **Debugging and Troubleshooting:** Level-appropriate debugging strategies
-	
-	**4. Real-World Applications and Use Cases**
-	- **Beginner Projects:** 2-3 simple, guided projects with step-by-step instructions
-	- **Intermediate Projects:** 2-3 moderate complexity projects with guided discovery
-	- **Advanced Case Studies:** 2-3 complex, real-world scenarios with architectural analysis
-	- **Industry Applications:** How {topic} is used across different industries and scales
-	- **Portfolio Building:** Guidance for creating impressive projects at each level
-	
-	**5. Performance, Scalability, and Production Readiness**
-	- **Basic Performance:** Understanding performance implications for beginners
-	- **Optimization Techniques:** Intermediate-level performance improvements
-	- **Advanced Scalability:** Enterprise-level considerations, monitoring, and optimization
-	- **Security Considerations:** Security practices appropriate to each skill level
-	- **Deployment and DevOps:** From simple deployment to complex CI/CD pipelines
-	
-	**6. Ecosystem and Advanced Topics**
-	- **Tool Ecosystem:** Essential tools, libraries, and frameworks for each level
-	- **Integration Patterns:** How to integrate {topic} with other technologies
-	- **Advanced Specializations:** Deep dives into specialized areas and cutting-edge features
-	- **Research and Future Directions:** Emerging trends and ongoing developments
-	- **Community and Contribution:** How to engage with the community at different levels
-	
-	**7. Comprehensive Learning Resources**
-	- **Beginner Resources:** Tutorials, courses, and guided learning paths
-	- **Intermediate Resources:** Books, documentation, and practical guides
-	- **Advanced Resources:** Research papers, expert blogs, conference talks, and specialized courses
-	- **Community Resources:** Forums, Discord servers, meetups, and contribution opportunities
-	- **Certification and Career Paths:** Professional development opportunities
-	- **Next Steps:** Personalized recommendations based on interests and career goals
-	
-	{search_context}
-	
-	**Special Instructions for Multi-Level Content:**
-	
-	1. **Clear Level Indicators:** Use consistent formatting to indicate content difficulty (🟢 Beginner, 🟡 Intermediate, 🔴 Advanced)
-	
-	2. **Progressive Examples:** Start each concept with a simple example, then build complexity:
+You are an expert technical writer creating a comprehensive, multi-level learning document about {topic}.
 
+**CRITICAL HUGO FORMATTING RULES:**
+1. **DO NOT** wrap the entire output in markdown code blocks
+2. Output should be **plain text** with proper markdown formatting
+3. Generate content ready to be copy-pasted into a .md file
+4. Use Hugo-compatible markdown syntax
+
+**Current Chapter:** {chapter}
+
+**Your document MUST include progressive content for all skill levels:**
+
+## 1. Getting Started with {topic}
+- 🟢 **For Beginners**: What is {topic}? Why learn it? Basic terminology
+- 🟡 **For Intermediate**: Quick overview, what's new, comparisons
+- 🔴 **For Advanced**: High-level architecture, design philosophy
+- **Universal**: Development environment setup for all platforms
+- **Learning Paths**: Clear guidance by skill level
+
+## 2. Foundational Concepts and Core Principles
+- 🟢 **Beginner Track**: Step-by-step introduction with simple examples
+- 🟡 **Intermediate Track**: Deeper dive into underlying principles
+- 🔴 **Advanced Track**: Theoretical foundations, architectural considerations
+- **Graduated Exercises**: Simple → Complex progression
+- **Common Pitfalls**: What to avoid at each level
+
+## 3. Practical Implementation and Development
+- 🟢 **Basic Implementation**: Simple, working examples
+- 🟡 **Intermediate Patterns**: Common use cases, best practices
+- 🔴 **Advanced Techniques**: Optimization, complex scenarios
+- **Code Examples**: Progressive complexity (basic → production-ready)
+- **Debugging Strategies**: Level-appropriate troubleshooting
+
+## 4. Real-World Applications and Use Cases
+- 🟢 **Beginner Projects**: 2-3 simple guided projects
+- 🟡 **Intermediate Projects**: 2-3 moderate complexity with guided discovery
+- 🔴 **Advanced Case Studies**: 2-3 complex scenarios with architecture analysis
+- **Industry Applications**: How {topic} is used across scales
+- **Portfolio Building**: Creating impressive projects at each level
+
+## 5. Performance, Scalability, and Production
+- 🟢 **Basic Performance**: Understanding performance implications
+- 🟡 **Optimization Techniques**: Intermediate improvements
+- 🔴 **Advanced Scalability**: Enterprise-level considerations
+- **Security Practices**: Appropriate to each skill level
+- **Deployment**: Simple deployment → complex CI/CD pipelines
+
+## 6. Ecosystem and Advanced Topics
+- **Tool Ecosystem**: Essential tools/libraries/frameworks per level
+- **Integration Patterns**: Integrating {topic} with other technologies
+- **Advanced Specializations**: Deep dives into specialized areas
+- **Research and Future**: Emerging trends and developments
+- **Community Engagement**: How to participate at different levels
+
+## 7. Comprehensive Learning Resources
+- 🟢 **Beginner Resources**: Tutorials, courses, guided paths
+- 🟡 **Intermediate Resources**: Books, documentation, practical guides
+- 🔴 **Advanced Resources**: Research papers, expert blogs, conferences
+- **Community Resources**: Forums, Discord, meetups, contribution opportunities
+- **Career Paths**: Professional development and certifications
+- **Next Steps**: Personalized recommendations by interest
+
+**MULTI-LEVEL FORMATTING:**
+
+1. **Level Indicators**: Use 🟢🟡🔴 consistently
+   
+2. **Progressive Examples**:
 🟢 Basic Example: [Simple implementation]
 
-🟡 Enhanced Example: [Added complexity/features]
+🟡 Enhanced Example: [Added complexity]
 
-🔴 Production Example: [Full-featured, optimized implementation]
+🔴 Production Example: [Full-featured, optimized]
 
+3. **Flexible Reading Paths**:
+- "New to {topic}? Start here and follow 🟢 path"
+- "Some experience? Jump to section X, focus on 🟡 content"
+- "Advanced techniques? Focus on 🔴 sections"
 
-	3. **Flexible Reading Paths:** Provide clear navigation guidance:
-	- "New to {topic}? Start here and follow the 🟢 path"
-	- "Have some experience? Jump to section X and focus on 🟡 content"
-	- "Looking for advanced techniques? Focus on 🔴 sections"
-	
-	4. **Cross-References:** Link related concepts across skill levels
-	
-	5. **Practical Checkpoints:** Include self-assessment points to help readers gauge their progress
-	
-	Generate detailed content for: {chapter}
-	
-	Create content that serves as both a beginner's guide and an advanced reference, with clear pathways for different learning objectives. Ensure smooth transitions between skill levels while maintaining the depth needed for each audience.
-	"""
+4. **Cross-References**: Link related concepts across levels
 
-# structure_prompt = """
-# 	You are an expert curriculum designer and hands-on learning specialist, utilizing the latest 2025 research-backed methodologies for experiential education and practical skill development.
+5. **Self-Assessment Checkpoints**: Help readers gauge progress
 
-# 	Generate a comprehensive, practice-focused learning structure for "{topic}" at {level} level based on modern "learning-by-doing" educational approaches including:
-# 	- **Code-First Learning**: Prioritizing hands-on coding over theoretical explanations
-# 	- **Experiential Learning Cycles**: Learn → Practice → Reflect → Apply methodology
-# 	- **Active Construction**: Building real projects and solutions from day one
-# 	- **Microlearning with Immediate Application**: Small concepts with instant practical application
-# 	- **Problem-Based Learning**: Real scenarios requiring hands-on problem solving
-# 	- **Discovery Through Practice**: Learning concepts by implementing them first
+**HANDS-ON EMPHASIS (ALL LEVELS):**
+- Multiple practical examples per concept
+- "Try This Now" challenges
+- "Debug This" sections
+- "Extend This" advanced challenges
+- Real-world application scenarios
 
-# 	Create a JSON array of 6-8 strategically designed chapters with maximum practical emphasis, where each chapter includes:
-# 	- title: Action-oriented chapter name emphasizing practical outcomes
-# 	- subtopics: 4-6 hands-on activities, coding exercises, and practical implementations
-# 	- practical_focus: Specific hands-on activities, commands, code examples, and projects
-# 	- learning_outcomes: Skills students will demonstrate through practice
-# 	- hands_on_ratio: Percentage of practical vs theoretical content (aim for 70-80% practical)
+{search_context}
 
-# 	**Enhanced Practical Requirements:**
+**Generate detailed, multi-level content for chapter:** {chapter}
 
-# 	**If level = "beginner":**
-# 	- **Maximum Hands-On Approach**: Start coding/doing within first 15 minutes
-# 	- **Follow-Along Examples**: Step-by-step coding tutorials with copy-paste ready commands
-# 	- **Immediate Gratification**: Quick wins and visible results in each lesson
-# 	- **Building Blocks**: Each practical exercise builds on the previous one
-# 	- **Error-Driven Learning**: Common mistakes and how to fix them through practice
-# 	- **Mini-Projects**: Small, completable projects in every chapter
+**Remember:**
+- Serve beginners AND advanced users simultaneously
+- Provide clear navigation between skill levels
+- Smooth transitions between levels
+- Maintain depth appropriate to each audience
+- Enable flexible learning paths
+"""
 
-# 	**If level = "advanced":**  
-# 	- **Production-Ready Practice**: Real-world scenarios and enterprise-level implementations
-# 	- **Performance Labs**: Hands-on optimization and benchmarking exercises
-# 	- **Architecture Workshops**: Build and deploy complex systems
-# 	- **Debugging Challenges**: Real-world problem-solving exercises
-# 	- **Code Review Sessions**: Analyzing and improving existing codebases
-# 	- **Industry Simulations**: Replicate real workplace scenarios and challenges
-
-# 	**If level = "combined":**
-# 	- **Progressive Difficulty Labs**: 🟢 Simple exercises → 🟡 Intermediate projects → 🔴 Advanced implementations
-# 	- **Multi-Track Practicals**: Different complexity levels for same concepts
-# 	- **Choose-Your-Own-Adventure**: Multiple practical paths based on skill level
-# 	- **Peer Programming**: Collaborative coding exercises across skill levels
-# 	- **Real-World Case Studies**: Practical implementations at different complexity levels
-
-# 	**Mandatory Practical Elements for Each Chapter:**
-# 	1. **Immediate Action Items**: What to code/build/implement in first 10 minutes
-# 	2. **Command Reference**: Copy-paste ready commands, code snippets, and configurations
-# 	3. **Hands-On Exercises**: At least 3-5 practical exercises per chapter
-# 	4. **Build-Along Projects**: Step-by-step guided implementations
-# 	5. **Challenge Exercises**: Independent practice to reinforce learning
-# 	6. **Real-World Applications**: How the concepts apply in actual work scenarios
-# 	7. **Troubleshooting Labs**: Common problems and hands-on debugging
-# 	8. **Quick Reference**: Practical cheat sheets and command references
-
-# 	**Content Distribution Target:**
-# 	- 70-80% Hands-on practice, coding, building, implementing
-# 	- 20-30% Essential theory and explanations
-# 	- Every theoretical concept must be immediately followed by practical application
-# 	- No more than 5 minutes of theory without hands-on practice
-
-# 	Topic: {topic}
-# 	Level: {level}
-
-# 	Return ONLY valid JSON in this exact format:
-# 	[
-# 	{{
-# 		"title": "Hands-On {topic} Fundamentals: Build Your First Working Solution",
-# 		"subtopics": [
-# 		"Quick Setup and First Running Example", 
-# 		"Essential Commands and Immediate Practice", 
-# 		"Build Your First Mini-Project Step-by-Step", 
-# 		"Common Issues and Hands-On Troubleshooting",
-# 		"Extend and Customize Your Implementation"
-# 		],
-# 		"practical_focus": [
-# 		"15-minute setup with working example",
-# 		"10 essential commands with copy-paste examples", 
-# 		"Build a functional mini-project from scratch",
-# 		"Debug 5 common beginner errors hands-on",
-# 		"Customize and enhance the basic implementation"
-# 		],
-# 		"learning_outcomes": [
-# 		"Create and run a working {topic} solution",
-# 		"Execute essential commands confidently", 
-# 		"Debug common issues independently",
-# 		"Customize basic implementations"
-# 		],
-# 		"hands_on_ratio": "75% practical, 25% essential theory"
-# 	}},
-# 	{{
-# 		"title": "Core Implementation Workshop: Build Real-World Solutions",
-# 		"subtopics": [
-# 		"Advanced Implementation Patterns with Live Coding",
-# 		"Performance Testing and Optimization Lab", 
-# 		"Integration Workshop with External Systems",
-# 		"Error Handling and Recovery Implementation",
-# 		"Production-Ready Code Development"
-# 		],
-# 		"practical_focus": [
-# 		"Code 3 different implementation patterns",
-# 		"Benchmark and optimize performance hands-on",
-# 		"Connect to real APIs and databases",
-# 		"Implement comprehensive error handling",
-# 		"Deploy to production environment"
-# 		],
-# 		"learning_outcomes": [
-# 		"Implement advanced {topic} patterns",
-# 		"Optimize for production performance",
-# 		"Integrate with real-world systems",
-# 		"Handle errors gracefully in practice"
-# 		],
-# 		"hands_on_ratio": "80% practical, 20% essential theory"
-# 	}}
-# 	]
-
-# 	Generate 6-8 chapters total following this hands-on structure. Prioritize practical application over theoretical knowledge. Every subtopic should involve actual doing, building, coding, or implementing. Respond with ONLY the JSON array, no explanations or additional text.
-# 	"""
-
+# Structure prompt for generating topic structure
 structure_prompt = """
-You are an expert curriculum designer and hands-on learning specialist, utilizing the latest 2025 research-backed methodologies for experiential education and practical skill development.
+You are an expert curriculum designer and hands-on learning specialist using 2025 best practices for experiential education.
 
-Generate a comprehensive, practice-focused learning structure for "{topic}" at {level} level based on modern "learning-by-doing" educational approaches including:
-- **Code-First Learning**: Prioritizing hands-on coding over theoretical explanations
-- **Experiential Learning Cycles**: Learn → Practice → Reflect → Apply methodology
-- **Active Construction**: Building real projects and solutions from day one
-- **Microlearning with Immediate Application**: Small concepts with instant practical application
-- **Problem-Based Learning**: Real scenarios requiring hands-on problem solving
-- **Discovery Through Practice**: Learning concepts by implementing them first
+Generate a comprehensive, practice-focused learning structure for "{topic}" at {level} level.
 
-Create a JSON array of 6-8 strategically designed chapters with maximum practical emphasis, where each chapter includes:
-- title: Action-oriented chapter name emphasizing practical outcomes
-- subtopics: 4-6 hands-on activities, coding exercises, and practical implementations
-- practical_focus: Specific hands-on activities, commands, code examples, and projects
-- learning_outcomes: Skills students will demonstrate through practice
-- hands_on_ratio: Percentage of practical vs theoretical content (aim for 70-80% practical)
+**Based on modern learning-by-doing approaches:**
+- Code-First Learning: Hands-on coding over theory
+- Experiential Learning: Learn → Practice → Reflect → Apply
+- Active Construction: Building real projects from day one
+- Microlearning: Small concepts with immediate application
+- Problem-Based Learning: Real scenarios requiring hands-on solutions
+- Discovery Through Practice: Learning by implementing
 
-**Chapter Structure Alignment:**
+**Create JSON array of 6-8 chapters with:**
+- title: Action-oriented chapter name
+- subtopics: 4-6 hands-on activities, exercises, implementations
+- practical_focus: Specific activities, commands, code examples
+- learning_outcomes: Skills demonstrated through practice
+- hands_on_ratio: Percentage of practical vs theoretical (aim 70-80%)
+
+**Level-Specific Requirements:**
 
 **If level = "beginner":**
-Follow this chapter progression to match beginner learning needs:
-1. **Introduction to {topic}** - What is it, why learn it, setup environment
-2. **Core Concepts and Fundamentals** - Building blocks with hands-on practice
-3. **Intermediate Topics** - More advanced aspects with practical exercises
-4. **Advanced Topics and Best Practices** - Complex areas with real-world context
-5. **Guided Projects** - Step-by-step practical implementations
-6. **Further Learning and Resources** - Next steps and community resources
+Follow this structure:
+1. Introduction to {topic}
+2. Core Concepts and Fundamentals
+3. Intermediate Topics
+4. Advanced Topics and Best Practices
+5. Guided Projects
+6. Further Learning and Resources
 
-**Maximum Hands-On Approach**: Start coding/doing within first 15 minutes
-- **Follow-Along Examples**: Step-by-step coding tutorials with copy-paste ready commands
-- **Immediate Gratification**: Quick wins and visible results in each lesson
-- **Building Blocks**: Each practical exercise builds on the previous one
-- **Error-Driven Learning**: Common mistakes and how to fix them through practice
-- **Mini-Projects**: Small, completable projects in every chapter
+**Maximum Hands-On**:
+- Start coding within 15 minutes
+- Follow-along tutorials with copy-paste commands
+- Immediate wins and visible results
+- Building block approach
+- Error-driven learning
+- Mini-projects in every chapter
 
 **If level = "advanced":**
-Follow this chapter progression for experienced professionals:
-1. **Introduction to Advanced {topic}** - Recap and advanced challenges
-2. **Deep Dive into Advanced Concepts** - Complex building blocks and mechanisms
-3. **Performance Optimization and Scalability** - Optimization techniques and patterns
-4. **Security, Resilience, and Reliability** - Production-level considerations
-5. **Interoperability and Ecosystem Integration** - Complex system integration
-6. **Case Studies and Real-World Applications** - Complex scenario analysis
-7. **Future Trends and Research Directions** - Emerging developments
-8. **Advanced Resources and Community** - Expert-level resources
+Follow this structure:
+1. Introduction to Advanced {topic}
+2. Deep Dive into Advanced Concepts
+3. Performance Optimization and Scalability
+4. Security, Resilience, and Reliability
+5. Interoperability and Ecosystem Integration
+6. Case Studies and Real-World Applications
+7. Future Trends and Research Directions
+8. Advanced Resources and Community
 
-**Production-Ready Practice**: Real-world scenarios and enterprise-level implementations
-- **Performance Labs**: Hands-on optimization and benchmarking exercises
-- **Architecture Workshops**: Build and deploy complex systems
-- **Debugging Challenges**: Real-world problem-solving exercises
-- **Code Review Sessions**: Analyzing and improving existing codebases
-- **Industry Simulations**: Replicate real workplace scenarios and challenges
+**Production-Ready Practice**:
+- Real-world scenarios
+- Performance labs with benchmarking
+- Architecture workshops
+- Debugging challenges
+- Code review sessions
+- Industry simulations
 
-**If level = "combined":**
-Follow this multi-level chapter progression:
-1. **Getting Started with {topic}** - Multi-level introduction and setup
-2. **Foundational Concepts and Core Principles** - Progressive complexity tracks
-3. **Practical Implementation and Development** - Graduated implementation patterns
-4. **Real-World Applications and Use Cases** - Projects from simple to complex
-5. **Performance, Scalability, and Production Readiness** - Multi-level considerations
-6. **Ecosystem and Advanced Topics** - Comprehensive ecosystem coverage
-7. **Comprehensive Learning Resources** - Resources for all skill levels
+**If level = "complete" or "combined":**
+Follow this structure:
+1. Getting Started with {topic}
+2. Foundational Concepts and Core Principles
+3. Practical Implementation and Development
+4. Real-World Applications and Use Cases
+5. Performance, Scalability, and Production
+6. Ecosystem and Advanced Topics
+7. Comprehensive Learning Resources
 
-**Progressive Difficulty Labs**: 🟢 Simple exercises → 🟡 Intermediate projects → 🔴 Advanced implementations
-- **Multi-Track Practicals**: Different complexity levels for same concepts
-- **Choose-Your-Own-Adventure**: Multiple practical paths based on skill level
-- **Peer Programming**: Collaborative coding exercises across skill levels
-- **Real-World Case Studies**: Practical implementations at different complexity levels
+**Progressive Labs**: 🟢 Simple → 🟡 Intermediate → 🔴 Advanced
+- Multi-track practicals
+- Choose-your-own-adventure paths
+- Peer programming exercises
+- Multi-level case studies
 
-**Mandatory Practical Elements for Each Chapter:**
-1. **Immediate Action Items**: What to code/build/implement in first 10 minutes
-2. **Command Reference**: Copy-paste ready commands, code snippets, and configurations
-3. **Hands-On Exercises**: At least 3-5 practical exercises per chapter
-4. **Build-Along Projects**: Step-by-step guided implementations
-5. **Challenge Exercises**: Independent practice to reinforce learning
-6. **Real-World Applications**: How the concepts apply in actual work scenarios
-7. **Troubleshooting Labs**: Common problems and hands-on debugging
-8. **Quick Reference**: Practical cheat sheets and command references
+**Mandatory Elements Per Chapter:**
+1. Immediate action items (first 10 min)
+2. Copy-paste ready commands/code
+3. 3-5 hands-on exercises
+4. Build-along projects
+5. Independent challenge exercises
+6. Real-world applications
+7. Troubleshooting labs
+8. Quick reference/cheat sheets
 
 **Content Distribution Target:**
-- 70-80% Hands-on practice, coding, building, implementing
-- 20-30% Essential theory and explanations
-- Every theoretical concept must be immediately followed by practical application
-- No more than 5 minutes of theory without hands-on practice
+- 70-80% Hands-on practice
+- 20-30% Essential theory
+- Every theory followed by immediate practice
+- Max 5 minutes theory without hands-on
 
-**File Organization Requirements:**
-Please suggest:
-- **Index File Name**: A descriptive name for the main index.md file based on the topic
-- **Content Subfolder Name**: A clean subfolder name where all chapter files and subtopic files will be organized (everything except the main index file)
+**File Organization (IMPORTANT):**
+- Suggest index filename based on topic
+- Suggest subfolder name for all chapters
 
 Topic: {topic}
 Level: {level}
 
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON:
 [
 {{
-    "title": "Getting Started with {topic}: Foundation and Setup",
-    "subtopics": [
-    "Quick Setup and First Running Example", 
-    "Essential Commands and Immediate Practice", 
-    "Build Your First Mini-Project Step-by-Step", 
-    "Common Issues and Hands-On Troubleshooting",
-    "Extend and Customize Your Implementation"
-    ],
-    "practical_focus": [
-    "15-minute setup with working example",
-    "10 essential commands with copy-paste examples", 
-    "Build a functional mini-project from scratch",
-    "Debug 5 common beginner errors hands-on",
-    "Customize and enhance the basic implementation"
-    ],
-    "learning_outcomes": [
-    "Create and run a working {topic} solution",
-    "Execute essential commands confidently", 
-    "Debug common issues independently",
-    "Customize basic implementations"
-    ],
-    "hands_on_ratio": "75% practical, 25% essential theory",
-    "suggested_index_name": "{topic}_Complete_Learning_Guide.md",
-    "suggested_subfolder": "{topic}_chapters"
-}},
-{{
-    "title": "Core Implementation Workshop: Build Real-World Solutions",
-    "subtopics": [
-    "Advanced Implementation Patterns with Live Coding",
-    "Performance Testing and Optimization Lab", 
-    "Integration Workshop with External Systems",
-    "Error Handling and Recovery Implementation",
-    "Production-Ready Code Development"
-    ],
-    "practical_focus": [
-    "Code 3 different implementation patterns",
-    "Benchmark and optimize performance hands-on",
-    "Connect to real APIs and databases",
-    "Implement comprehensive error handling",
-    "Deploy to production environment"
-    ],
-    "learning_outcomes": [
-    "Implement advanced {topic} patterns",
-    "Optimize for production performance",
-    "Integrate with real-world systems",
-    "Handle errors gracefully in practice"
-    ],
-    "hands_on_ratio": "80% practical, 20% essential theory"
+ "title": "Getting Started with {topic}: Foundation and Setup",
+ "subtopics": [
+   "Quick Setup and First Running Example",
+   "Essential Commands with Practice",
+   "Build First Mini-Project Step-by-Step",
+   "Common Issues and Troubleshooting",
+   "Extend and Customize Implementation"
+ ],
+ "practical_focus": [
+   "15-minute setup with working example",
+   "10 essential commands with examples",
+   "Build functional mini-project",
+   "Debug 5 common errors hands-on",
+   "Customize basic implementation"
+ ],
+ "learning_outcomes": [
+   "Create and run working solution",
+   "Execute essential commands confidently",
+   "Debug common issues independently",
+   "Customize basic implementations"
+ ],
+ "hands_on_ratio": "75% practical, 25% theory",
+ "suggested_index_name": "learn-{topic}-complete-guide.md",
+ "suggested_subfolder": "{topic}-guide-chapters"
 }}
 ]
 
-Generate 6-8 chapters total following this enhanced structure that aligns with the appropriate beginner/advanced chapter progressions. Prioritize practical application over theoretical knowledge. Every subtopic should involve actual doing, building, coding, or implementing. Include the suggested file naming in the first chapter only. Respond with ONLY the JSON array, no explanations or additional text.
+Generate 6-8 chapters. Prioritize hands-on practice. Every subtopic should involve doing, building, coding, implementing. Respond with ONLY JSON, no explanations.
 """
